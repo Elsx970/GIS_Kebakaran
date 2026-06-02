@@ -1,0 +1,6 @@
+# Abaikan file SQL mentah karena ukurannya > 100MB (batas maksimal GitHub)
+*.sql
+
+# Abaikan file GeoJSON mentah dari QGIS yang ukurannya sangat besar
+# (Datanya sudah aman berada di dalam file ZIP database)
+Hasil/*.geojson
