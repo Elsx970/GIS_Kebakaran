@@ -13,6 +13,11 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Turf.js for Spatial Analysis -->
+    <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
 
@@ -62,6 +67,33 @@
         </div>
 
         <button id="btnAllYears" class="btn-outline">Tampilkan Semua Tahun</button>
+
+        <!-- Modul Analisis Cerdas -->
+        <div class="smart-modules-container">
+            <div class="list-title">Modul Analisis Cerdas</div>
+            <div class="module-toggles">
+                <label class="toggle-btn" title="Pemetaan Zona Bahaya">
+                    <input type="checkbox" id="modul1Toggle">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label"><i class="fa-solid fa-layer-group"></i> Modul 1: Hazard Zoning</span>
+                </label>
+                <label class="toggle-btn" title="Algoritma Jalur Evakuasi Cerdas">
+                    <input type="checkbox" id="modul2Toggle">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label"><i class="fa-solid fa-route"></i> Modul 2: Jalur Evakuasi</span>
+                </label>
+                <label class="toggle-btn" title="Manajemen Spasial Posko Darurat">
+                    <input type="checkbox" id="modul3Toggle">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label"><i class="fa-solid fa-tent"></i> Modul 3: Posko Darurat</span>
+                </label>
+                <label class="toggle-btn" title="Taktik Sekat Bakar & Mitigasi">
+                    <input type="checkbox" id="modul4Toggle">
+                    <span class="toggle-slider"></span>
+                    <span class="toggle-label"><i class="fa-solid fa-fire-extinguisher"></i> Modul 4: Sekat Bakar</span>
+                </label>
+            </div>
+        </div>
 
         <!-- Daftar Hotspot Aktif -->
         <div class="hotspot-list-container">

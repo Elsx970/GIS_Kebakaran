@@ -74,6 +74,11 @@ const coordDisplay = document.getElementById('coordDisplay');
 const searchInput = document.getElementById('searchInput');
 const btnSearch = document.getElementById('btnSearch');
 
+const modul1Toggle = document.getElementById('modul1Toggle');
+const modul2Toggle = document.getElementById('modul2Toggle');
+const modul3Toggle = document.getElementById('modul3Toggle');
+const modul4Toggle = document.getElementById('modul4Toggle');
+
 const iconSun = document.getElementById('iconSun');
 const iconMoon = document.getElementById('iconMoon');
 const playIcon = document.getElementById('playIcon');
@@ -84,6 +89,13 @@ let allData = [];
 let isPlaying = false;
 let playInterval;
 let searchMarker;
+
+// Layer group untuk Modul Cerdas
+const modulLayerGroup = L.layerGroup().addTo(map);
+let hexGridLayer = null;
+let evacuationRoutesLayer = null;
+let poskoLayer = null;
+let firebreakLayer = null;
 
 // =============================
 // Theme Toggle
@@ -256,6 +268,12 @@ function updateMapFromSlider() {
         const filteredData = allData.filter(point => point[3] === selectedYear);
         renderHeatmap(filteredData);
     }
+    
+    // Perbarui semua modul jika aktif karena data berubah
+    if (modul1Toggle && modul1Toggle.checked) renderModul1();
+    if (modul2Toggle && modul2Toggle.checked) renderModul2();
+    if (modul3Toggle && modul3Toggle.checked) renderModul3();
+    if (modul4Toggle && modul4Toggle.checked) renderModul4();
 }
 
 yearSlider.addEventListener('input', updateMapFromSlider);
@@ -319,6 +337,248 @@ function animateValue(obj, start, end, duration) {
     };
     window.requestAnimationFrame(step);
 }
+
+// =============================
+// Modul Cerdas Logic
+// =============================
+
+// Modul 1: Hazard Zoning (Turf.js Hex Grid)
+function renderModul1() {
+    if (hexGridLayer) {
+        modulLayerGroup.removeLayer(hexGridLayer);
+        hexGridLayer = null;
+    }
+    if (!modul1Toggle.checked) return;
+
+    // Ambil titik aktif saat ini (berdasarkan slider)
+    const selectedYear = parseInt(yearSlider.value);
+    let points = allData;
+    if (selectedYear >= parseInt(yearSlider.min)) {
+        points = allData.filter(p => p[3] === selectedYear);
+    }
+
+    if (points.length === 0) return;
+
+    try {
+        // Konversi ke format GeoJSON yang dipahami Turf.js
+        const turfPoints = turf.featureCollection(points.map(p => turf.point([p[1], p[0]])));
+        
+        // Buat bounding box yang melingkupi semua titik (dengan sedikit padding)
+        const bbox = turf.bbox(turfPoints);
+        bbox[0] -= 0.1; bbox[1] -= 0.1; bbox[2] += 0.1; bbox[3] += 0.1;
+        
+        // Buat hex grid (ukuran sel 10 km)
+        const cellSide = 10;
+        const options = {units: 'kilometers'};
+        const hexGrid = turf.hexGrid(bbox, cellSide, options);
+        
+        // Hitung jumlah titik di setiap hex
+        const collected = turf.collect(hexGrid, turfPoints, 'intensity', 'values');
+        
+        hexGridLayer = L.geoJSON(collected, {
+            style: function (feature) {
+                const count = feature.properties.values ? feature.properties.values.length : 0;
+                if (count === 0) return { fillOpacity: 0, opacity: 0, weight: 0 };
+                
+                let color = '#22c55e'; // Hijau (< 50)
+                if (count >= 100) color = '#ef4444'; // Merah
+                else if (count >= 50) color = '#eab308'; // Kuning
+                
+                return {
+                    color: color,
+                    weight: 1,
+                    opacity: 0.8,
+                    fillOpacity: 0.45
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                const count = feature.properties.values ? feature.properties.values.length : 0;
+                if (count > 0) {
+                    let status = "Zona Hijau (Relatif Aman)";
+                    if (count >= 100) status = "Zona Merah (Dilarang Masuk - Ancaman Maksimal)";
+                    else if (count >= 50) status = "Zona Kuning (Siaga Evakuasi)";
+                    
+                    layer.bindPopup(`
+                        <div style="font-family: 'Inter', sans-serif;">
+                            <strong style="color:var(--bg-dark);">${status}</strong><br>
+                            Kepadatan: <b>${count} Hotspot</b>
+                        </div>
+                    `);
+                }
+            }
+        });
+        
+        modulLayerGroup.addLayer(hexGridLayer);
+    } catch (e) {
+        console.error("Modul 1 Error:", e);
+    }
+}
+
+// Modul 2: Jalur Evakuasi Cerdas (Semi-Dinamis)
+function renderModul2() {
+    if (evacuationRoutesLayer) {
+        modulLayerGroup.removeLayer(evacuationRoutesLayer);
+        evacuationRoutesLayer = null;
+    }
+    if (!modul2Toggle.checked) return;
+
+    const selectedYear = parseInt(yearSlider.value);
+    let points = allData;
+    if (selectedYear >= parseInt(yearSlider.min)) points = allData.filter(p => p[3] === selectedYear);
+    if (points.length === 0) return;
+
+    try {
+        const turfPoints = turf.featureCollection(points.map(p => turf.point([p[1], p[0]])));
+        const center = turf.center(turfPoints);
+        
+        // Titik pusat daratan Provinsi Lampung (Terbanggi Besar/Gunung Sugih)
+        const lampungCenter = turf.point([105.0, -4.8]);
+        
+        // Hitung sudut (bearing) dari pusat api menuju ke tengah daratan Lampung (Inland)
+        let inlandBearing = turf.bearing(center, lampungCenter);
+        // Jika pusat api kebetulan berada persis di tengah daratan, arahkan evakuasi ke Utara
+        if (Math.abs(inlandBearing) < 1) inlandBearing = 0;
+        
+        // Rute lari dari pusat api menuju area aman sejauh 20km ke arah dalam daratan (menghindari semua pesisir laut)
+        const riskEdge = turf.destination(center, 3, inlandBearing, {units: 'kilometers'});
+        const safeZoneCenter = turf.destination(center, 20, inlandBearing, {units: 'kilometers'});
+        
+        const routes = L.layerGroup();
+        
+        // Rute Primer (Lurus ke zona aman)
+        const route1 = L.polyline([
+            [riskEdge.geometry.coordinates[1], riskEdge.geometry.coordinates[0]],
+            [safeZoneCenter.geometry.coordinates[1], safeZoneCenter.geometry.coordinates[0]]
+        ], { color: '#22c55e', weight: 6, opacity: 0.9 }).bindPopup('<b>Rute Primer</b><br>Kapasitas besar, untuk roda 4 & kelompok rentan.');
+        
+        // Rute Sekunder (Menghindar / Berbelok lewat titik tengah offset)
+        const midPoint = turf.midpoint(riskEdge, safeZoneCenter);
+        // Offset rute sekunder 45 derajat dari arah utama
+        const curvedMid = turf.destination(midPoint, 6, inlandBearing - 45, {units: 'kilometers'}); 
+        const route2 = L.polyline([
+            [riskEdge.geometry.coordinates[1], riskEdge.geometry.coordinates[0]],
+            [curvedMid.geometry.coordinates[1], curvedMid.geometry.coordinates[0]],
+            [safeZoneCenter.geometry.coordinates[1], safeZoneCenter.geometry.coordinates[0]]
+        ], { color: '#eab308', weight: 4, dashArray: '8, 8', opacity: 0.9 }).bindPopup('<b>Rute Sekunder</b><br>Alternatif untuk roda 2 & jalan kaki.');
+        
+        // Titik Kumpul (Radius 1km di zona aman)
+        const safeZoneCircle = turf.circle(safeZoneCenter, 1.5, {units: 'kilometers'});
+        const safeZone = L.geoJSON(safeZoneCircle, {
+            style: { color: '#22c55e', fillOpacity: 0.35, weight: 2 }
+        }).bindPopup('<b>Titik Kumpul Aman</b>');
+        
+        routes.addLayer(route1);
+        routes.addLayer(route2);
+        routes.addLayer(safeZone);
+        
+        evacuationRoutesLayer = routes;
+        modulLayerGroup.addLayer(evacuationRoutesLayer);
+    } catch(e) { console.error("Modul 2 Error:", e); }
+}
+
+// Modul 3: Posko Darurat (Semi-Dinamis)
+function renderModul3() {
+    if (poskoLayer) {
+        modulLayerGroup.removeLayer(poskoLayer);
+        poskoLayer = null;
+    }
+    if (!modul3Toggle.checked) return;
+
+    const selectedYear = parseInt(yearSlider.value);
+    let points = allData;
+    if (selectedYear >= parseInt(yearSlider.min)) points = allData.filter(p => p[3] === selectedYear);
+    if (points.length === 0) return;
+
+    try {
+        const turfPoints = turf.featureCollection(points.map(p => turf.point([p[1], p[0]])));
+        const center = turf.center(turfPoints);
+        
+        // Titik pusat daratan Provinsi Lampung
+        const lampungCenter = turf.point([105.0, -4.8]);
+        let inlandBearing = turf.bearing(center, lampungCenter);
+        if (Math.abs(inlandBearing) < 1) inlandBearing = 0;
+        
+        // Penempatan Semi-Dinamis ditarik ke arah pedalaman (inland)
+        const pPengungsian = turf.destination(center, 20, inlandBearing, {units: 'kilometers'}); 
+        const pKesehatan = turf.destination(center, 12, inlandBearing + 30, {units: 'kilometers'}); // Serong 30 derajat
+        const pLogistik = turf.destination(center, 15, inlandBearing - 30, {units: 'kilometers'});  // Serong -30 derajat
+
+        const poskos = L.layerGroup();
+        const iconPengungsian = L.divIcon({ className: 'custom-div-icon', html: '<div class="marker-tent"><i class="fa-solid fa-tent"></i></div>', iconSize: [28, 28] });
+        const iconKesehatan = L.divIcon({ className: 'custom-div-icon', html: '<div class="marker-health"><i class="fa-solid fa-plus"></i></div>', iconSize: [28, 28] });
+        const iconLogistik = L.divIcon({ className: 'custom-div-icon', html: '<div class="marker-logistic"><i class="fa-solid fa-box"></i></div>', iconSize: [28, 28] });
+        
+        poskos.addLayer(L.marker([pPengungsian.geometry.coordinates[1], pPengungsian.geometry.coordinates[0]], {icon: iconPengungsian}).bindPopup('<b>Posko Pengungsian</b><br>Ditempatkan di zona aman berjarak >20km dari pusat api.'));
+        poskos.addLayer(L.marker([pKesehatan.geometry.coordinates[1], pKesehatan.geometry.coordinates[0]], {icon: iconKesehatan}).bindPopup('<b>Posko Kesehatan</b><br>Berdekatan dengan area intersepsi evakuasi.'));
+        poskos.addLayer(L.marker([pLogistik.geometry.coordinates[1], pLogistik.geometry.coordinates[0]], {icon: iconLogistik}).bindPopup('<b>Posko Logistik</b><br>Akses suplai via rute timur.'));
+        
+        poskoLayer = poskos;
+        modulLayerGroup.addLayer(poskoLayer);
+    } catch(e) { console.error("Modul 3 Error:", e); }
+}
+
+// Modul 4: Sekat Bakar & Mitigasi (Semi-Dinamis Convex Hull)
+function renderModul4() {
+    if (firebreakLayer) {
+        modulLayerGroup.removeLayer(firebreakLayer);
+        firebreakLayer = null;
+    }
+    if (!modul4Toggle.checked) return;
+
+    const selectedYear = parseInt(yearSlider.value);
+    let points = allData;
+    if (selectedYear >= parseInt(yearSlider.min)) points = allData.filter(p => p[3] === selectedYear);
+    if (points.length === 0) return;
+
+    try {
+        const turfPoints = turf.featureCollection(points.map(p => turf.point([p[1], p[0]])));
+        
+        const mitigasi = L.layerGroup();
+        
+        // Buat Convex Hull melingkupi titik-titik terluar api, lalu buffer 2km
+        let firebreakGeom = null;
+        let excavatorLatLng = null;
+
+        if (points.length >= 3) {
+            const hull = turf.convex(turfPoints);
+            if (hull) {
+                const bufferedHull = turf.buffer(hull, 2, {units: 'kilometers'});
+                firebreakGeom = bufferedHull;
+                
+                // Ambil koordinat pertama dari poligon untuk taruh eskavator
+                const c = bufferedHull.geometry.coordinates[0][0];
+                excavatorLatLng = [c[1], c[0]];
+            }
+        }
+        
+        // Fallback jika titik < 3 atau convex hull gagal
+        if (!firebreakGeom) {
+            const center = turf.center(turfPoints);
+            firebreakGeom = turf.circle(center, 5, {units: 'kilometers'});
+            excavatorLatLng = [center.geometry.coordinates[1], center.geometry.coordinates[0]];
+        }
+
+        // Layer Sekat Bakar (Polygon tanpa fill, batas putus-putus)
+        const firebreakPoly = L.geoJSON(firebreakGeom, {
+            style: { color: '#3b82f6', weight: 4, dashArray: '10, 10', opacity: 0.9, fillOpacity: 0 }
+        }).bindPopup('<b>Rencana Sekat Bakar (Convex Hull)</b><br>Sistem melingkupi luasan ancaman api secara dinamis dengan buffer 2km.');
+        
+        const iconExcavator = L.divIcon({ className: 'custom-div-icon', html: '<div class="marker-excavator"><i class="fa-solid fa-truck-monster"></i></div>', iconSize: [28, 28] });
+        const excavator = L.marker(excavatorLatLng, {icon: iconExcavator}).bindPopup('<b>Eskavator</b><br>Aktivitas: Penggalian Parit Mitigasi keliling area ancaman.');
+        
+        mitigasi.addLayer(firebreakPoly);
+        mitigasi.addLayer(excavator);
+        
+        firebreakLayer = mitigasi;
+        modulLayerGroup.addLayer(firebreakLayer);
+    } catch(e) { console.error("Modul 4 Error:", e); }
+}
+
+// Bind Events
+if (modul1Toggle) modul1Toggle.addEventListener('change', renderModul1);
+if (modul2Toggle) modul2Toggle.addEventListener('change', renderModul2);
+if (modul3Toggle) modul3Toggle.addEventListener('change', renderModul3);
+if (modul4Toggle) modul4Toggle.addEventListener('change', renderModul4);
 
 // Init
 document.addEventListener('DOMContentLoaded', loadData);
