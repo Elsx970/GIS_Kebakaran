@@ -26,13 +26,15 @@ const overlayMaps = {
 };
 const layerControl = L.control.layers(null, overlayMaps, { position: 'topright', collapsed: true }).addTo(map);
 
-// Load spatial layers from database
-async function loadSpatialLayer(layerName, displayName, styleOptions, defaultOn) {
+// Load spatial layers from static files
+async function loadSpatialLayer(fileName, displayName, styleOptions, defaultOn) {
     try {
-        const response = await fetch('api_layer.php?layer=' + layerName);
+        const response = await fetch('Hasil/' + fileName);
+        if (!response.ok) throw new Error('File tidak ditemukan');
+        
         const geojsonData = await response.json();
         
-        if (geojsonData.error || !geojsonData.features || geojsonData.features.length === 0) {
+        if (!geojsonData.features || geojsonData.features.length === 0) {
             return;
         }
 
@@ -56,7 +58,7 @@ async function loadSpatialLayer(layerName, displayName, styleOptions, defaultOn)
             layer.addTo(map);
         }
     } catch (e) {
-        console.warn('Layer ' + layerName + ' gagal dimuat:', e);
+        console.warn('Layer ' + fileName + ' gagal dimuat:', e);
     }
 }
 
@@ -239,15 +241,15 @@ async function loadData() {
         console.error("Gagal memuat data dari API:", error);
     }
 
-    // Load spatial layers (checkbox di Layer Control)
-    loadSpatialLayer('ADMINISTRASI_AR_KABKOTA', 'Batas Kabupaten/Kota', { color: '#ffffff', weight: 1.5, fillOpacity: 0.05, dashArray: '4 2' }, true);
-    loadSpatialLayer('Administrasi_AR_Kecamatan', 'Batas Kecamatan', { color: '#94a3b8', weight: 0.7, fillOpacity: 0.02 }, false);
-    loadSpatialLayer('Sungai', 'Sungai', { color: '#3b82f6', weight: 1.5 }, false);
-    loadSpatialLayer('Rawa', 'Rawa', { color: '#0ea5e9', weight: 1, fillOpacity: 0.2 }, false);
-    loadSpatialLayer('Jalan', 'Jalan', { color: '#f59e0b', weight: 0.8 }, false);
-    loadSpatialLayer('HutanLahanRendah', 'Hutan Lahan Rendah', { color: '#22c55e', weight: 0, fillOpacity: 0.25 }, false);
-    loadSpatialLayer('SemakBelukar', 'Semak Belukar', { color: '#84cc16', weight: 0, fillOpacity: 0.2 }, false);
-    loadSpatialLayer('Permukiman', 'Permukiman', { color: '#f97316', weight: 0, fillOpacity: 0.25 }, false);
+    // Load spatial layers (checkbox di Layer Control) dari folder Hasil
+    loadSpatialLayer('ADMINISTRASI_AR_KABKOTA.geojson', 'Batas Kabupaten/Kota', { color: '#ffffff', weight: 1.5, fillOpacity: 0.05, dashArray: '4 2' }, true);
+    loadSpatialLayer('Administrasi_AR_Kecamatan.geojson', 'Batas Kecamatan', { color: '#94a3b8', weight: 0.7, fillOpacity: 0.02 }, false);
+    loadSpatialLayer('Sungai.geojson', 'Sungai', { color: '#3b82f6', weight: 1.5 }, false);
+    loadSpatialLayer('Rawa.geojson', 'Rawa', { color: '#0ea5e9', weight: 1, fillOpacity: 0.2 }, false);
+    loadSpatialLayer('Jalan.geojson', 'Jalan', { color: '#f59e0b', weight: 0.8 }, false);
+    loadSpatialLayer('HutanLahanRendah.geojson', 'Hutan Lahan Rendah', { color: '#22c55e', weight: 0, fillOpacity: 0.25 }, false);
+    loadSpatialLayer('SemakBelukar.geojson', 'Semak Belukar', { color: '#84cc16', weight: 0, fillOpacity: 0.2 }, false);
+    loadSpatialLayer('Permukiman.geojson', 'Permukiman', { color: '#f97316', weight: 0, fillOpacity: 0.25 }, false);
 }
 
 // =============================

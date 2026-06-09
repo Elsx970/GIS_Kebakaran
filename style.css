@@ -256,14 +256,14 @@ input[type=range]::-moz-range-thumb {
 /* ===================== */
 /* Modul Cerdas UI       */
 /* ===================== */
-.smart-modules-container {
+.smart-modules-container, .data-report-container {
     margin-bottom: 16px;
     padding: 12px;
     background: var(--stat-bg);
     border: 1px solid var(--glass-border);
     border-radius: 10px;
 }
-.module-toggles {
+.module-toggles, .report-links {
     display: flex;
     flex-direction: column;
     gap: 8px;

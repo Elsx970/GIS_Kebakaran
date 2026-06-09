@@ -1,89 +1,70 @@
 # Web GIS Kebakaran Lampung
 
-Platform Web GIS interaktif untuk memvisualisasikan data historis titik api (hotspot) kebakaran di Provinsi Lampung. Proyek ini dibangun dengan PHP murni, MySQL, dan Leaflet.js.
+Platform Web GIS interaktif untuk memvisualisasikan data historis titik api (hotspot) kebakaran di Provinsi Lampung. Proyek ini dibangun dengan PHP, MySQL, Leaflet.js, dan Turf.js untuk Analisis Spasial (Modul Cerdas).
 
 ## Fitur Utama
 
-*   **Peta Panas (Heatmap) Interaktif**: Visualisasi persebaran titik api dari tahun ke tahun.
-*   **Animasi Waktu (Timelapse)**: Fitur *playback* untuk melihat pergerakan titik api secara animasi dari tahun 2017 - 2026.
-*   **Layer Spasial Lengkap**: Mendukung data dari QGIS, termasuk Batas Administrasi (Kabupaten/Kecamatan), Sungai, Rawa, Jalan, Hutan, Semak Belukar, dan Permukiman.
-*   **Mode Terang & Gelap**: Kemampuan mengubah tema (*Light / Dark Mode*) yang terintegrasi dengan perubahan warna basemap (CartoDB Dark/Light).
-*   **Pencarian Lokasi**: Cari lokasi spesifik di peta menggunakan Nominatim API.
+*   **Peta Panas (Heatmap) Interaktif**: Visualisasi persebaran ribuan titik api dengan performa tinggi.
+*   **Modul GIS Cerdas (Turf.js)**: 
+    *   **Hazard Zoning**: Pemetaan area rawan dengan Hex Grid.
+    *   **Jalur Evakuasi**: Simulasi rute evakuasi menjauhi area api.
+    *   **Posko Darurat**: Rekomendasi penempatan posko.
+    *   **Sekat Bakar**: Perencanaan parit mitigasi berbasis Convex Hull.
+*   **Animasi Waktu (Timelapse)**: Fitur *playback* untuk pergerakan titik api dari tahun ke tahun.
+*   **Layer Spasial Statis**: Menampilkan Batas Administrasi, Jalan, Sungai, Rawa, dsb. (Langsung me-*load* GeoJSON dari filesystem untuk performa maksimal tanpa membebani database).
+*   **Mode Terang & Gelap**: *Light / Dark Mode* yang terintegrasi dengan basemap CartoDB.
 *   **Admin Dashboard**:
-    *   Sistem otentikasi login admin yang aman (bcrypt).
-    *   Input data titik api secara manual dengan klik pada peta.
-    *   Impor data titik api massal (Bulk Import) menggunakan file CSV.
-    *   Ekspor data titik api ke format CSV.
-    *   Grafik analitik tren kebakaran tahunan menggunakan Chart.js.
+    *   Autentikasi login aman (bcrypt).
+    *   Input data titik api secara manual di peta.
+    *   Impor data titik api massal via CSV.
+    *   Grafik analitik tren kebakaran.
 
-## Persyaratan Sistem
+## Instalasi Super Cepat (One-Click Install)
 
-*   Web Server: Apache (XAMPP / Laragon / LAMP)
-*   PHP Version: >= 7.4
-*   Database: MySQL atau MariaDB
-
-## Instalasi
+Proyek ini telah dikonfigurasi agar **Sangat Profesional dan Rapi**. Tidak perlu lagi mengimpor file SQL manual berukuran ratusan MB. Anda cukup menjalankan skrip Installer.
 
 ### 1. Kloning Repositori
-
 ```bash
 git clone https://github.com/username/repo-kebakaran.git
 cd repo-kebakaran
 ```
-
 *(Atau letakkan semua file di dalam folder `htdocs/kebakaran` jika Anda menggunakan XAMPP)*
 
-### 2. Konfigurasi Database
+### 2. Jalankan Installer Otomatis
+1. Buka browser dan akses skrip installer:
+   `http://localhost/kebakaran/install.php`
+2. Skrip ini akan secara otomatis:
+   * Membuat database `gis_kebakaran`.
+   * Membuat tabel yang dibutuhkan.
+   * Membuat akun Admin Default.
+   * Mengimpor **8.000+** data titik api langsung dari file cache JSON ke database dalam hitungan detik.
 
-1.  Buka phpMyAdmin (atau *client* MySQL lainnya).
-2.  Buat database baru dengan nama: `gis_kebakaran`.
-3.  Impor file database:
-    *   Buka menu **Import**.
-    *   Pilih file `gis_kebakaran.sql` yang berada di dalam folder proyek.
-    *   Klik **Go** untuk menjalankan impor.
-
-> File ini sudah berisi skema lengkap (tabel `titik_api`, `spatial_layers`, dan `admin_users`) beserta **semua data titik api historis dan data spasial (batas wilayah, dsb.)** yang telah kita masukkan sebelumnya.
-
-### 3. Konfigurasi Koneksi PHP
-
-Buka file `config.php` dan sesuaikan pengaturan koneksi jika diperlukan (secara *default* sudah disetel untuk *local development* menggunakan XAMPP):
-
-```php
-$host = 'localhost';
-$user = 'root';
-$pass = ''; // Sesuaikan jika MySQL Anda memiliki password
-$db   = 'gis_kebakaran';
-```
+### 3. Selesai!
+Akses halaman utama di: `http://localhost/kebakaran/`
 
 ## Cara Penggunaan
 
-### Halaman Publik (Peta Interaktif)
-Akses melalui *browser*: `http://localhost/kebakaran/`
-
 ### Halaman Admin
-1.  Akses melalui *browser*: `http://localhost/kebakaran/login.php`
-2.  Gunakan kredensial *default* berikut:
+1.  Akses: `http://localhost/kebakaran/login.php`
+2.  Kredensial *default* pasca-install:
     *   **Username**: `admin`
     *   **Password**: `admin123`
 
-## Impor Data Spasial Tambahan (Opsional)
+## Manajemen Data Spasial (GeoJSON)
 
-Jika Anda memiliki data spasial berupa GeoJSON (hasil konversi dari Shapefile / SHP via QGIS):
-1. Masukkan file GeoJSON ke dalam folder `Hasil/`.
-2. Akses skrip importer via *browser*: `http://localhost/kebakaran/importer.php`.
-3. Tunggu hingga proses selesai. Data spasial akan tersimpan di tabel `spatial_layers` (menggunakan tipe data `GEOMETRY`).
-*Catatan: Pastikan konfigurasi `max_allowed_packet` di file `my.ini` (MySQL) Anda sudah diperbesar jika ukuran file GeoJSON sangat besar (misal > 10MB).*
+Untuk menghindari kendala `max_allowed_packet` pada MySQL, **semua layer spasial (Batas wilayah, jalan, dll) sekarang dimuat langsung dari folder `Hasil/`**. 
 
-## Teknologi yang Digunakan
+Jika Anda ingin mengganti/menambah layer GeoJSON:
+1. Masukkan file `.geojson` ke folder `Hasil/`.
+2. Edit file `script.js` pada bagian `loadSpatialLayer('nama_file.geojson', ...)` untuk memunculkannya di kontrol peta.
+
+## Teknologi
 
 *   **Backend**: PHP 8.x, MySQLi
 *   **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
 *   **Libraries**:
     *   [Leaflet.js](https://leafletjs.com/) - Interactive Maps
     *   [Leaflet.heat](https://github.com/Leaflet/Leaflet.heat) - Heatmap rendering
+    *   [Turf.js](https://turfjs.org/) - Advanced Spatial Analysis
     *   [Chart.js](https://www.chartjs.org/) - Analytics chart
 *   **Basemaps**: CartoDB (Dark & Light)
-
----
-
-Dibuat dengan ❤️ untuk pemetaan visual yang lebih baik.
