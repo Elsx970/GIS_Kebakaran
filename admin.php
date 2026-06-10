@@ -85,7 +85,7 @@ if (isset($_GET['delete'])) {
 }
 
 // Fetch Data for Table
-$result = $conn->query("SELECT * FROM titik_api ORDER BY id DESC LIMIT 100");
+$result = $conn->query("SELECT * FROM titik_api ORDER BY id DESC");
 
 // Fetch Data for Chart
 $chartQuery = $conn->query("SELECT tahun, COUNT(*) as total FROM titik_api GROUP BY tahun ORDER BY tahun ASC");
@@ -212,7 +212,7 @@ while ($row = $chartQuery->fetch_assoc()) {
         <!-- Tabel Data -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Data Titik Api Terbaru (Limit 100)</h3>
+                <h3>Data Titik Api Keseluruhan</h3>
                 <div>
                     <a href="?export_csv=true" class="btn btn-success btn-sm">Unduh CSV</a>
                     <a href="?delete_all=true" class="btn btn-danger btn-sm" onclick="return confirm('Yakin ingin menghapus SEMUA data di database?');">Hapus Semua Data</a>

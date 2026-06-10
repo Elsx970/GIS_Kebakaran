@@ -20,15 +20,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
+    <!-- Navbar / Header (Optional, for professional look) -->
+    <header class="main-header">
+        <div class="logo-title">
+            <i class="fa-solid fa-fire-flame-curved"></i>
+            <span>SIPKAR Lampung</span>
+        </div>
+        <nav class="nav-links">
+            <a href="#peta">Peta Spasial</a>
+            <a href="#data-statistik">Statistik & Data</a>
+            
+            <!-- Theme Toggle -->
+            <button id="themeToggle" class="theme-toggle-btn" title="Ganti Tema">
+                <svg id="iconSun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <svg id="iconMoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
 
-    <!-- Theme Toggle -->
-    <button id="themeToggle" class="theme-toggle-btn" title="Ganti Tema">
-        <svg id="iconSun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        <svg id="iconMoon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    </button>
+            <a href="login.php" class="btn-login"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+        </nav>
+    </header>
 
-    <!-- Coordinate Display -->
-    <div id="coordDisplay" class="coord-display">Lat: -, Lng: -</div>
+    <section id="peta" class="hero-map">
+        <!-- Coordinate Display -->
+        <div id="coordDisplay" class="coord-display">Lat: -, Lng: -</div>
 
     <!-- UI Overlay -->
     <div class="panel-info">
@@ -107,7 +121,112 @@
     </div>
 
     <!-- Map Container -->
-    <div id="map"></div>
+        <div id="map"></div>
+        
+        <!-- Scroll Indicator -->
+        <a href="#data-statistik" class="scroll-indicator">
+            <i class="fa-solid fa-chevron-down"></i>
+        </a>
+    </section>
+
+    <!-- Data & Informasi Section -->
+    <section id="data-statistik" class="data-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>Statistik & Analisis Karhutla</h2>
+                <p>Rekapitulasi Luas Kebakaran Hutan dan Lahan di Provinsi Lampung.</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
+                    <div class="stat-info">
+                        <h3>Total Titik Api</h3>
+                        <p class="stat-number">8,080</p>
+                        <span class="stat-desc">Akumulasi Data 2021-2026</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-map-location-dot"></i></div>
+                    <div class="stat-info">
+                        <h3>Cakupan Wilayah</h3>
+                        <p class="stat-number">15</p>
+                        <span class="stat-desc">Kabupaten/Kota Terpantau</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon"><i class="fa-solid fa-satellite-dish"></i></div>
+                    <div class="stat-info">
+                        <h3>Sumber Data</h3>
+                        <p class="stat-number">NASA</p>
+                        <span class="stat-desc">Satelit FIRMS VIIRS & MODIS</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Data Table -->
+            <div class="data-table-container">
+                <div class="table-header-info">
+                    <h3>Rekapitulasi Luas Kebakaran per Kabupaten (Hektar)</h3>
+                    <p>Data luasan area terdampak karhutla dari tahun 2018 hingga 2026 berdasarkan pencitraan satelit dan laporan lapangan.</p>
+                </div>
+                <div class="table-responsive">
+                    <table class="styled-table">
+                        <thead>
+                            <tr>
+                                <th>Kabupaten / Kota</th>
+                                <th>2018</th>
+                                <th>2019</th>
+                                <th>2020</th>
+                                <th>2021</th>
+                                <th>2022</th>
+                                <th>2023</th>
+                                <th>2024</th>
+                                <th>2025</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Lampung Selatan</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>34.59</td><td>0</td><td>45.19</td></tr>
+                            <tr><td>Lampung Tengah</td><td>2,412.00</td><td>1,602.00</td><td>268.00</td><td>95.00</td><td>80.00</td><td>594.97</td><td>1,249.22</td><td>249.13</td></tr>
+                            <tr><td>Lampung Timur</td><td>3,620.00</td><td>4,669.00</td><td>756.00</td><td>3,541.00</td><td>7,564.00</td><td>4,014.52</td><td>8,019.67</td><td>2,582.15</td></tr>
+                            <tr><td>Lampung Utara</td><td>23.00</td><td>255.00</td><td>0</td><td>366.00</td><td>57.00</td><td>23.46</td><td>124.01</td><td>181.11</td></tr>
+                            <tr><td>Mesuji</td><td>4,565.00</td><td>15,266.00</td><td>0</td><td>516.00</td><td>0</td><td>1,225.37</td><td>1,581.87</td><td>353.83</td></tr>
+                            <tr><td>Pesisir Barat</td><td>0</td><td>0</td><td>1.00</td><td>17.00</td><td>12.00</td><td>0</td><td>0</td><td>24.16</td></tr>
+                            <tr><td>Tanggamus</td><td>0</td><td>0</td><td>0</td><td>0</td><td>2.00</td><td>0</td><td>0</td><td>0</td></tr>
+                            <tr><td>Tulang Bawang</td><td>4,454.00</td><td>11,210.00</td><td>8.00</td><td>555.00</td><td>163.00</td><td>370.61</td><td>1,748.56</td><td>37.48</td></tr>
+                            <tr><td>Tulang Bawang Barat</td><td>10.00</td><td>1,323.00</td><td>0</td><td>62.00</td><td>0</td><td>4.55</td><td>82.04</td><td>76.76</td></tr>
+                            <tr><td>Way Kanan</td><td>73.00</td><td>1,221.00</td><td>325.00</td><td>260.00</td><td>112.00</td><td>238.59</td><td>436.64</td><td>246.22</td></tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="total-row">
+                                <td>TOTAL PROVINSI</td>
+                                <td>15,157.00</td>
+                                <td>35,546.00</td>
+                                <td>1,358.00</td>
+                                <td>5,412.00</td>
+                                <td>7,990.00</td>
+                                <td>6,506.66</td>
+                                <td>13,242.01</td>
+                                <td>3,796.03</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="info-text">
+                <h3>Tentang Sistem Informasi Pemetaan Kebakaran (SIPKAR)</h3>
+                <p>Sistem ini dirancang untuk memantau, menganalisis, dan memetakan persebaran titik api (hotspot) di seluruh wilayah Provinsi Lampung secara spasial. Melalui integrasi modul GIS Cerdas (Turf.js), sistem ini tidak hanya menampilkan data historis secara animasi, namun juga mampu menghasilkan simulasi mitigasi bencana seperti: penentuan Hazard Zoning (Zona Bahaya), Rute Evakuasi Cerdas, Penempatan Posko Darurat, hingga rekomendasi pembuatan Sekat Bakar berbasis Algoritma Convex Hull.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <p>&copy; 2026 Web GIS Kebakaran Lampung. Data bersumber dari instansi terkait dan observasi satelit.</p>
+        </div>
+    </footer>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
